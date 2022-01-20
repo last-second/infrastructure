@@ -10,43 +10,44 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func getConfigValue(app awscdk.App, key, defaultValue string) string {
-	contextValue := app.Node().TryGetContext(jsii.String(key))
+func getConfigValue(app awscdk.App, contextKey, envKey, defaultValue string) string {
+	contextValue := app.Node().TryGetContext(jsii.String(contextKey))
 
 	if value, ok := (contextValue).(string); ok {
 		return value
 	}
 
-	if value, ok := os.LookupEnv(key); ok {
+	if value, ok := os.LookupEnv(envKey); ok {
 		return value
 	}
 
-	if len(defaultValue) > 0 {
-		return defaultValue
-	}
-
-	return ""
+	return defaultValue
 }
 
 func main() {
 	app := awscdk.NewApp(nil)
 
-	var (
-		stage = getConfigValue(app, "AWS_STAGE", "local")
-	)
+	stage := getConfigValue(app, "stage", "AWS_STAGE", "local")
+	scopeName := &stacks.ScopeName{Value: "LastSecond"}
 
-	logrus.Info()
+	logrus.WithFields(logrus.Fields{
+		"stage":     stage,
+		"scopeName": scopeName.Value,
+	}).Info()
 
 	stacks.NewMemoryStack(app, stacks.MemoryStackProps{
 		CommonStackProps: stacks.CommonStackProps{
-			Version: "v1",
-			Stage:   stage,
+			Version:   "v1",
+			Stage:     stage,
+			ScopeName: scopeName,
 		},
 	})
+
 	stacks.NewRecallStack(app, stacks.RecallStackProps{
 		CommonStackProps: stacks.CommonStackProps{
-			Version: "v1",
-			Stage:   stage,
+			Version:   "v1",
+			Stage:     stage,
+			ScopeName: scopeName,
 		},
 	})
 
