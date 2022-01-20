@@ -12,14 +12,14 @@ type RecallStackProps struct {
 }
 
 func NewRecallStack(scope constructs.Construct, props RecallStackProps) awscdk.Stack {
-	id := getStackId("Recall")
-	stackName := getStackName(id, props.CommonStackProps.Stage)
-	stack := awscdk.NewStack(scope, &id, &awscdk.StackProps{
-		StackName: jsii.String(stackName),
+	id := props.ScopeName.Append("RecallStack").Append(props.Stage)
+	stack := awscdk.NewStack(scope, id.Get(), &awscdk.StackProps{
+		StackName: id.Get(),
 	})
 
-	restApi := awsapigateway.NewRestApi(stack, jsii.String(stackName+"-RestApi"), &awsapigateway.RestApiProps{
-		RestApiName: jsii.String(stackName + "-RestApi"),
+	restApiName := id.Append("RestApi").Get()
+	restApi := awsapigateway.NewRestApi(stack, restApiName, &awsapigateway.RestApiProps{
+		RestApiName: restApiName,
 		DefaultCorsPreflightOptions: &awsapigateway.CorsOptions{
 			AllowOrigins: awsapigateway.Cors_ALL_METHODS(),
 			AllowMethods: awsapigateway.Cors_ALL_METHODS(),
@@ -31,20 +31,20 @@ func NewRecallStack(scope constructs.Construct, props RecallStackProps) awscdk.S
 
 	// TODO authorizer
 
-	userEndpoints(stack, api, props)
+	userEndpoints(stack, api, id, props.Version)
 
 	// TODO taskEndpoints(scope, api)
 
 	return stack
 }
 
-func userEndpoints(scope constructs.Construct, api awsapigateway.Resource, props RecallStackProps) {
-	versioned := api.AddResource(jsii.String(props.Version), nil)
+func userEndpoints(scope constructs.Construct, api awsapigateway.Resource, id *ScopeName, version string) {
+	versioned := api.AddResource(jsii.String(version), nil)
 	user := versioned.AddResource(jsii.String("user"), nil)
 
 	// TODO CRUD user
 
-	getUser := createGoFunc(scope, "GetUser", GoFuncProps{Path: "./lambda/get_user/main.go"})
+	getUser := createGoFunc(scope, id.Append("GetUser"), GoFuncProps{Path: "./lambda/get_user/main.go"})
 	user.AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(getUser, nil), nil)
 
 }

@@ -10,14 +10,13 @@ import (
 
 type GoFuncProps struct {
 	// Note: path relative to project root
-	Path string
-
+	Path        string
 	Environment *map[string]*string
 }
 
 func createGoFunc(
 	scope constructs.Construct,
-	name string,
+	name *ScopeName,
 	props GoFuncProps,
 ) awslambda.Function {
 	environment := map[string]*string{
@@ -34,7 +33,7 @@ func createGoFunc(
 
 	code := awslambda.AssetCode_FromAsset(
 		// this path should include the vendor folder
-		jsii.String("../"),
+		jsii.String("../services"),
 		&awss3assets.AssetOptions{
 			Bundling: &awscdk.BundlingOptions{
 				Image:       awslambda.Runtime_GO_1_X().BundlingImage(),
@@ -51,9 +50,9 @@ func createGoFunc(
 
 	return awslambda.NewFunction(
 		scope,
-		jsii.String(name),
+		name.Get(),
 		&awslambda.FunctionProps{
-			FunctionName: jsii.String(name),
+			FunctionName: name.Get(),
 			Runtime:      awslambda.Runtime_GO_1_X(),
 			Handler:      jsii.String("main"),
 			Code:         code,

@@ -12,14 +12,14 @@ type MemoryStackProps struct {
 }
 
 func NewMemoryStack(scope constructs.Construct, props MemoryStackProps) awscdk.Stack {
-	id := getStackId("Memory")
-	stackName := getStackName(id, props.CommonStackProps.Stage)
-	stack := awscdk.NewStack(scope, &id, &awscdk.StackProps{
-		StackName: jsii.String(stackName),
+	id := props.ScopeName.Append("MemoryStack").Append(props.Stage)
+	stack := awscdk.NewStack(scope, id.Get(), &awscdk.StackProps{
+		StackName: id.Get(),
 	})
 
-	awsdynamodb.NewTable(stack, jsii.String("UserTable"), &awsdynamodb.TableProps{
-		TableName: jsii.String("UserTable"),
+	userTableName := id.Append("UserTable").Get()
+	awsdynamodb.NewTable(stack, userTableName, &awsdynamodb.TableProps{
+		TableName: userTableName,
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
 			Type: awsdynamodb.AttributeType_STRING,

@@ -4,16 +4,21 @@ import (
 	"github.com/aws/jsii-runtime-go"
 )
 
+type ScopeName struct {
+	Value string
+}
+
+func (s *ScopeName) Append(value string) *ScopeName {
+	return &ScopeName{Value: s.Value + "-" + value}
+}
+
+func (s *ScopeName) Get() *string {
+	return jsii.String(s.Value)
+}
+
 type CommonStackProps struct {
 	Version, Stage string
-}
-
-func getStackId(name string) string {
-	return "LastSecond-" + name + "Stack"
-}
-
-func getStackName(id, stage string) string {
-	return id + "-" + stage
+	*ScopeName
 }
 
 func stringList(values ...string) *[]*string {
