@@ -1,8 +1,13 @@
+FLAGS = -c stage=dev
+
 vendor:
 	cd ../services && go mod vendor 
 
-synth: vendor
-	cdk synth -c stage=dev
+synth:
+	cdk synth $(FLAGS) -q
 
-deploy: vendor
-	cdk deploy -c stage=dev --all
+deploy:
+	cdk deploy $(FLAGS) --all
+
+clean:
+	rm -rf cdk.out

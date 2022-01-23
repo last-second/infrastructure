@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/jsii-runtime-go"
-	"github.com/sirupsen/logrus"
 )
 
 func getConfigValue(app awscdk.App, contextKey, envKey, defaultValue string) string {
@@ -30,20 +29,7 @@ func main() {
 	stage := getConfigValue(app, "stage", "AWS_STAGE", "local")
 	scopeName := &stacks.ScopeName{Value: "LastSecond"}
 
-	logrus.WithFields(logrus.Fields{
-		"stage":     stage,
-		"scopeName": scopeName.Value,
-	}).Info()
-
-	stacks.NewMemoryStack(app, stacks.MemoryStackProps{
-		CommonStackProps: stacks.CommonStackProps{
-			Version:   "v1",
-			Stage:     stage,
-			ScopeName: scopeName,
-		},
-	})
-
-	stacks.NewRecallStack(app, stacks.RecallStackProps{
+	stacks.UserStack(app, stacks.UserStackProps{
 		CommonStackProps: stacks.CommonStackProps{
 			Version:   "v1",
 			Stage:     stage,
