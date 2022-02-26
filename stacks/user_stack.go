@@ -15,17 +15,22 @@ type UserStackProps struct {
 }
 
 func UserStack(scope constructs.Construct, props UserStackProps) awscdk.Stack {
-	stackName := props.ScopeName.Append("UserStack").Append(props.Stage)
+	stackName := props.ScopeName.Append("UserStack")
 	stack := awscdk.NewStack(scope, stackName.Get(), &awscdk.StackProps{
 		StackName: stackName.Get(),
 	})
 
 	userTableName := stackName.Append("UserTable")
 	awsdynamodb.NewTable(stack, userTableName.Get(), &awsdynamodb.TableProps{
-		TableName:   userTableName.Get(),
-		BillingMode: awsdynamodb.BillingMode_PAY_PER_REQUEST,
+		TableName:     userTableName.Get(),
+		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
+		RemovalPolicy: awscdk.RemovalPolicy_RETAIN,
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
+			Type: awsdynamodb.AttributeType_STRING,
+		},
+		SortKey: &awsdynamodb.Attribute{
+			Name: jsii.String("email"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
 	})

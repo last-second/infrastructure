@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/last-second/infrastructure/stacks"
@@ -27,7 +28,7 @@ func main() {
 	app := awscdk.NewApp(nil)
 
 	stage := getConfigValue(app, "stage", "AWS_STAGE", "local")
-	scopeName := &stacks.ScopeName{Value: "LastSecond"}
+	scopeName := &stacks.ScopeName{Value: fmt.Sprintf("LastSecond-%s", stage)}
 
 	stacks.UserStack(app, stacks.UserStackProps{
 		CommonStackProps: stacks.CommonStackProps{
