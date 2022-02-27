@@ -1,6 +1,8 @@
 package stacks
 
 import (
+	"net/http"
+
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsdynamodb"
@@ -35,6 +37,12 @@ func UserStack(scope constructs.Construct, props UserStackProps) awscdk.Stack {
 		},
 	})
 
+	crudUserTablePolicy := awsiam.NewPolicy(stack, userTableName.Append("Role").Get(), &awsiam.PolicyProps{
+		Statements: &[]awsiam.PolicyStatement{
+			crudTablePolicyStatement(*stack.Region(), userTableName.Value),
+		},
+	})
+
 	restApiName := stackName.Append("RestApi")
 	restApi := awsapigateway.NewRestApi(stack, restApiName.Get(), &awsapigateway.RestApiProps{
 		RestApiName: restApiName.Get(),
@@ -54,23 +62,26 @@ func UserStack(scope constructs.Construct, props UserStackProps) awscdk.Stack {
 
 	// TODO CRUD user
 
+	environment := map[string]*string{
+		"LOGLEVEL":       aws.String("debug"),
+		"USERTABLE_NAME": userTableName.Get(),
+	}
+
+	createUserName := stackName.Append("CreateUser")
+	createUserFunc := createGoFunc(stack, createUserName, GoFuncProps{
+		Path:        "./lambda/create_user/main.go",
+		Environment: &environment,
+	})
+	createUserFunc.Role().AttachInlinePolicy(crudUserTablePolicy)
+	user.AddMethod(jsii.String(http.MethodPost), awsapigateway.NewLambdaIntegration(createUserFunc, nil), nil)
+
 	getUserName := stackName.Append("GetUser")
-	getUser := createGoFunc(stack, getUserName, GoFuncProps{
-		Path: "./lambda/get_user/main.go",
-		Environment: &map[string]*string{
-			"LOGLEVEL":       aws.String("debug"),
-			"USERTABLE_NAME": userTableName.Get(),
-		},
+	getUserFunc := createGoFunc(stack, getUserName, GoFuncProps{
+		Path:        "./lambda/get_user/main.go",
+		Environment: &environment,
 	})
-
-	crudUserTablePolicy := awsiam.NewPolicy(stack, getUserName.Append("Role").Get(), &awsiam.PolicyProps{
-		Statements: &[]awsiam.PolicyStatement{
-			crudTablePolicyStatement(*stack.Region(), userTableName.Value),
-		},
-	})
-	getUser.Role().AttachInlinePolicy(crudUserTablePolicy)
-
-	user.AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(getUser, nil), nil)
+	getUserFunc.Role().AttachInlinePolicy(crudUserTablePolicy)
+	user.AddMethod(jsii.String(http.MethodGet), awsapigateway.NewLambdaIntegration(getUserFunc, nil), nil)
 
 	return stack
 }
