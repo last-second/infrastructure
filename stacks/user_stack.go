@@ -83,5 +83,13 @@ func UserStack(scope constructs.Construct, props UserStackProps) awscdk.Stack {
 	getUserFunc.Role().AttachInlinePolicy(crudUserTablePolicy)
 	user.AddMethod(jsii.String(http.MethodGet), awsapigateway.NewLambdaIntegration(getUserFunc, nil), nil)
 
+	updateUserName := stackName.Append("UpdateUser")
+	updateUserFunc := createGoFunc(stack, updateUserName, GoFuncProps{
+		Path:        "./lambda/update_user/main.go",
+		Environment: &environment,
+	})
+	updateUserFunc.Role().AttachInlinePolicy(crudUserTablePolicy)
+	user.AddMethod(jsii.String(http.MethodPost), awsapigateway.NewLambdaIntegration(updateUserFunc, nil), nil)
+
 	return stack
 }
