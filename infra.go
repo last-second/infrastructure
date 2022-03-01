@@ -38,5 +38,13 @@ func main() {
 		},
 	})
 
+	stacks.TaskStack(app, stacks.TaskStackProps{
+		CommonStackProps: stacks.CommonStackProps{
+			Version:   "v1",
+			Stage:     stage,
+			ScopeName: scopeName,
+		},
+	})
+
 	app.Synth(nil)
 }
